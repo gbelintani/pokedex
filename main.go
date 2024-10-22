@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/gbelintani/pokedex/internal/pokeapi"
 )
 
 type command struct {
@@ -11,7 +13,13 @@ type command struct {
 	callback    func() error
 }
 
+type config struct {
+	next     *string
+	previous *string
+}
+
 var commands map[string]command
+var currentConfig config
 
 func init() {
 	commands = map[string]command{
@@ -25,12 +33,24 @@ func init() {
 			description: "Exit the application",
 			callback:    commandExit,
 		},
+		"map": {
+			name:        "map",
+			description: "Get next location areas",
+			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Get previous location areas",
+			callback:    commandMapb,
+		},
 	}
+
+	currentConfig = config{}
 }
 
 func main() {
 	for {
-		fmt.Printf("Pokedex > ")
+		fmt.Print("\nPokedex > ")
 		var input string
 		_, err := fmt.Scanln(&input)
 		if err != nil {
@@ -47,6 +67,34 @@ func main() {
 			continue
 		}
 	}
+}
+
+func printLocationAreas(r pokeapi.PokeApiResponse) {
+	for _, i := range r.Results {
+		fmt.Printf("%s\n", i.Name)
+	}
+}
+
+func commandMap() error {
+	res, err := pokeapi.GetLocationAreas(currentConfig.next)
+	if err != nil {
+		return err
+	}
+	currentConfig.next = res.Next
+	currentConfig.previous = res.Previous
+	printLocationAreas(res)
+	return nil
+}
+
+func commandMapb() error {
+	res, err := pokeapi.GetLocationAreas(currentConfig.previous)
+	if err != nil {
+		return err
+	}
+	currentConfig.next = res.Next
+	currentConfig.previous = res.Previous
+	printLocationAreas(res)
+	return nil
 }
 
 func commandHelp() error {
