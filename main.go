@@ -20,6 +20,7 @@ type config struct {
 
 var commands map[string]command
 var currentConfig config
+var client pokeapi.Client
 
 func init() {
 	commands = map[string]command{
@@ -46,6 +47,7 @@ func init() {
 	}
 
 	currentConfig = config{}
+	client = pokeapi.NewClient()
 }
 
 func main() {
@@ -76,7 +78,7 @@ func printLocationAreas(r pokeapi.PokeApiListLocationResponse) {
 }
 
 func commandMap() error {
-	res, err := pokeapi.GetLocationAreas(currentConfig.next)
+	res, err := client.GetLocationAreas(currentConfig.next)
 	if err != nil {
 		return err
 	}
@@ -87,7 +89,7 @@ func commandMap() error {
 }
 
 func commandMapb() error {
-	res, err := pokeapi.GetLocationAreas(currentConfig.previous)
+	res, err := client.GetLocationAreas(currentConfig.previous)
 	if err != nil {
 		return err
 	}
