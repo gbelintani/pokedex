@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gbelintani/pokedex/internal/pokeapi"
 )
@@ -16,6 +18,7 @@ type command struct {
 type config struct {
 	next     *string
 	previous *string
+	args     []string
 }
 
 var commands map[string]command
@@ -44,6 +47,11 @@ func init() {
 			description: "Get previous location areas",
 			callback:    commandMapb,
 		},
+		"explore": {
+			name:        "explore <location>",
+			description: "Get pokemon in location area",
+			callback:    commandExplore,
+		},
 	}
 
 	currentConfig = config{}
@@ -51,19 +59,27 @@ func init() {
 }
 
 func main() {
+	reader := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("\nPokedex > ")
-		var input string
-		_, err := fmt.Scanln(&input)
-		if err != nil {
-			fmt.Println(fmt.Errorf("error reading input: %w", err))
+		reader.Scan()
+		input := reader.Text()
+
+		words := strings.Split(input, " ")
+		if len(words) == 0 {
+			continue
 		}
-		command, ok := commands[input]
+
+		if len(words) > 1 {
+			currentConfig.args = words[1:]
+		}
+
+		command, ok := commands[words[0]]
 		if !ok {
 			fmt.Printf("Invalid Command %s", input)
 			continue
 		}
-		err = command.callback()
+		err := command.callback()
 		if err != nil {
 			fmt.Println(fmt.Errorf("error on command %s: %w", input, err))
 			continue
@@ -71,10 +87,22 @@ func main() {
 	}
 }
 
-func printLocationAreas(r pokeapi.PokeApiListLocationResponse) {
-	for _, i := range r.Results {
-		fmt.Printf("%s\n", i.Name)
+func commandExplore() error {
+	if len(currentConfig.args) != 1 {
+		return fmt.Errorf("invalid args %s", currentConfig.args)
 	}
+
+	res, err := client.GetLocationDetail(currentConfig.args[0])
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Exploring %s...\n", res.Name)
+	fmt.Println("Found Pokemon:")
+	for _, item := range res.PokemonEncounters {
+		fmt.Printf(" - %s\n", item.Pokemon.Name)
+	}
+
+	return nil
 }
 
 func commandMap() error {
@@ -84,7 +112,9 @@ func commandMap() error {
 	}
 	currentConfig.next = res.Next
 	currentConfig.previous = res.Previous
-	printLocationAreas(res)
+	for _, i := range res.Results {
+		fmt.Printf("%s\n", i.Name)
+	}
 	return nil
 }
 
@@ -95,7 +125,9 @@ func commandMapb() error {
 	}
 	currentConfig.next = res.Next
 	currentConfig.previous = res.Previous
-	printLocationAreas(res)
+	for _, i := range res.Results {
+		fmt.Printf("%s\n", i.Name)
+	}
 	return nil
 }
 
