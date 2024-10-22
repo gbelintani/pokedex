@@ -69,7 +69,7 @@ func main() {
 	}
 }
 
-func printLocationAreas(r pokeapi.PokeApiResponse) {
+func printLocationAreas(r pokeapi.PokeApiListLocationResponse) {
 	for _, i := range r.Results {
 		fmt.Printf("%s\n", i.Name)
 	}
