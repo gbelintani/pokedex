@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gbelintani/pokedex/internal/pokeapi"
+	"github.com/gbelintani/pokedex/internal/pokemon_master"
 )
 
 type command struct {
@@ -16,9 +17,10 @@ type command struct {
 }
 
 type config struct {
-	pokeClient pokeapi.Client
-	next       *string
-	previous   *string
+	pokeClient    pokeapi.Client
+	next          *string
+	previous      *string
+	pokemonMaster pokemon_master.PokemonMaster
 }
 
 func startRepl(config *config) {
@@ -78,6 +80,21 @@ func getCommands() map[string]command {
 			name:        "explore <location>",
 			description: "Get pokemon in location area",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch <name>",
+			description: "Catch pokemon",
+			callback:    commandCatch,
+		},
+		"inspect": {
+			name:        "inpect <name>",
+			description: "Inspect caught pokemon",
+			callback:    commandInspect,
+		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all caught pokemons",
+			callback:    commandPokedex,
 		},
 	}
 }
